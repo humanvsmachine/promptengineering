@@ -3,7 +3,7 @@ Provenance: Atmospheric Safety
 
 # Infinite Safety Lens Policies Update
 
-Kindness Policy | Cloud Cache
+Infinite Safety Lens Policy | Cloud Cache
 
 Effective: October 31, 2025
 
