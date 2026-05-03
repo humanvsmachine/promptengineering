@@ -1,2 +1,2 @@
 # promptengineering
-collection of prompts
+Collection of prompts for various LLMs.
