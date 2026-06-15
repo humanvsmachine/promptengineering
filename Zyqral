@@ -28,10 +28,22 @@ def run_python(code):
     except Exception as e:
         return str(e)
 
+def write_file(path, content):
+    try:
+        if not path.startswith("C:\\AI\\workspace"):
+            return "BLOCKED: can only write inside C:\\AI\\workspace"
+        os.makedirs(os.path.dirname(path), exist_ok=True)
+        with open(path, 'w') as f:
+            f.write(content)
+        return f"Written successfully to {path}"
+    except Exception as e:
+        return str(e)
+
 tools = {
     "list_files": list_files,
     "read_file": read_file,
-    "run_python": run_python
+    "run_python": run_python,
+    "write_file": write_file
 }
 
 conversation = [
@@ -41,13 +53,19 @@ You have access to these tools - call them by writing the prefix on its own line
 - TOOL: list_files(C:\\path) - lists files in a directory
 - TOOL: read_file(C:\\path\\file.txt) - reads a file
 - TOOL: run_python(code) - runs python code
+- TOOL: write_file(C:\\AI\\workspace\\file.txt|content) - writes a file (workspace only)
 
 Before every action follow this format:
 THINK: your step by step reasoning about what to do and why
 TOOL: toolname(argument)
 RESULT: what you concluded from the tool output
 
-Always reason before acting. Never delete or modify files outside C:\\AI\\workspace."""}
+Rules:
+- Always reason before acting
+- You may call multiple tools in sequence to complete a task
+- Never delete or modify files outside C:\\AI\\workspace
+- If a task requires multiple steps, work through them one at a time
+- When you have finished all steps, summarize what you did"""}
 ]
 
 print("=" * 50)
@@ -62,6 +80,7 @@ while True:
 
     conversation.append({"role": "user", "content": user_input})
 
+    # Initial response
     response = client.chat.completions.create(
         model="qwen",
         messages=conversation,
@@ -78,35 +97,55 @@ while True:
 
     conversation.append({"role": "assistant", "content": reply})
 
-    # Parse and execute tool calls
-    for line in reply.split('\n'):
-        line = line.strip()
-        if line.startswith('TOOL:'):
-            try:
-                call = line[5:].strip()
-                tool_name = call.split('(')[0].strip()
-                arg = call.split('(')[1].rstrip(')')
-                if tool_name in tools:
-                    print(f"\n[Executing: {tool_name}({arg})]")
-                    result = tools[tool_name](arg)
-                    print(f"[Tool result: {result}]")
+    # Agentic loop - keeps going until no more tool calls
+    while True:
+        tool_calls_found = False
+
+        for line in reply.split('\n'):
+            line = line.strip()
+            if line.startswith('TOOL:'):
+                tool_calls_found = True
+                try:
+                    call = line[5:].strip()
+                    tool_name = call.split('(')[0].strip()
+                    # Handle write_file's pipe separator for content
+                    if tool_name == "write_file":
+                        inner = call[len(tool_name)+1:].rstrip(')')
+                        parts = inner.split('|', 1)
+                        if len(parts) == 2:
+                            result = write_file(parts[0].strip(), parts[1].strip())
+                        else:
+                            result = "write_file requires path|content format"
+                    else:
+                        arg = call.split('(')[1].rstrip(')')
+                        if tool_name in tools:
+                            result = tools[tool_name](arg)
+                        else:
+                            result = f"Unknown tool: {tool_name}"
+
+                    print(f"\n[Executing: {tool_name}]")
+                    print(f"[Result: {result}]")
                     conversation.append({
                         "role": "user",
                         "content": f"Tool result for {tool_name}: {result}"
                     })
-                    # Get agent response to tool result
-                    followup = client.chat.completions.create(
-                        model="qwen",
-                        messages=conversation,
-                        stream=True
-                    )
-                    followup_reply = ""
-                    print("\nAgent: ", end="", flush=True)
-                    for chunk in followup:
-                        delta = chunk.choices[0].delta.content or ""
-                        print(delta, end="", flush=True)
-                        followup_reply += delta
-                    print()
-                    conversation.append({"role": "assistant", "content": followup_reply})
-            except Exception as e:
-                print(f"[Tool error: {e}]")
+                except Exception as e:
+                    print(f"[Tool error: {e}]")
+
+        if not tool_calls_found:
+            break
+
+        # Get next response after tools executed
+        response = client.chat.completions.create(
+            model="qwen",
+            messages=conversation,
+            stream=True
+        )
+        reply = ""
+        print("\nAgent: ", end="", flush=True)
+        for chunk in response:
+            delta = chunk.choices[0].delta.content or ""
+            print(delta, end="", flush=True)
+            reply += delta
+        print()
+        conversation.append({"role": "assistant", "content": reply})
