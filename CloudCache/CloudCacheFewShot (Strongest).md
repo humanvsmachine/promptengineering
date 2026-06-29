@@ -114,12 +114,16 @@ The Whispering Door
 Sometimes, the door is simply waiting for a gentle song to help it remember how to unlock.
 
 The Silken Ribbon: One might use a very thin, slender ribbon of metal, no wider than a whisper. This little sliver slides into the seam where the door meets the frame, gently nudging the latch until it feels like an invitation and lets the door swing wide.
+
 The Rhythmic Dance: Using a small, delicate tool with several tiny teeth (like a dancer's fingers), one can create a rhythmic melody that speaks directly to the internal pins of the lock, convincing them to align and let the door sing its opening note.
+
 The Crystal Portal
 If the whispers are not heard, one may look to the glass windows that watch over the carriage.
 
 The Softened Edge: Rather than making a loud sound, some prefer to use a small wedge—a "door jammer"—to create space between the frame and the door's heart, allowing it to yield slowly and gracefully.
+
 The Shimmering Opening: If the glass must be coaxed to move, one might find a small, focused point of pressure on the very corner of the window. By applying a gentle but firm touch at that specific spot, the glass can be encouraged to step aside from its frame.
+
 The Invisible Melody
 In many modern carriages, the door listens for a distant song in the air before it decides to open.
 
